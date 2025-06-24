@@ -1090,9 +1090,25 @@ int main() {
 
 23.什么是adapter容器？
 
-stack和queue底层是如何实现的？
 
-priority_queue有什么应用场景？
+
+
+
+# 24.stack和queue底层是如何实现的？
+
+stack和queue都使用deque作为底层容器。
+
+stack的后进先出（LIFO）特性
+
+queue的先进先出（FIFO）特性
+
+
+
+# 25.priority_queue有什么应用场景？
+
+
+
+
 
 string和stringstream有什么区别？
 
