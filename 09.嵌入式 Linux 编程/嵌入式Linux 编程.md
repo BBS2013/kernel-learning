@@ -7,3 +7,19 @@
 
 
 # 第1部分：嵌入式Linux 的元素
+
+树莓派4b
+
+
+
+
+
+# 第2部分：了解工具链
+
+软件包需求：
+
+```
+sudo apt-get install autoconf automake bison bzip2 cmake flex g++ gawk gcc gettext git gperf help2man libncurses5-dev libstdc++6 libtool libtool-bin make
+patch python3-dev rsync texinfo unzip wget xz-utils
+```
+
