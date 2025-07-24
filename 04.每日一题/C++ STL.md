@@ -2513,7 +2513,258 @@ Deallocating memory
 
 
 
-如何自定义STL容器的比较函数？
+# 37.如何自定义STL容器的比较函数？
+
+在C++中，自定义STL容器的比较函数有多种方法，主要取决于容器类型。以下是常见的几种方式：
+
+## 1. 函数对象（Functor）
+
+```cpp
+#include <iostream>
+#include <set>
+#include <vector>
+#include <algorithm>
+
+// 自定义比较函数对象
+struct Greater {
+    bool operator()(int a, int b) const {
+        return a > b;  // 降序排列
+    }
+};
+
+struct Person {
+    std::string name;
+    int age;
+    Person(std::string n, int a) : name(n), age(a) {}
+};
+
+struct PersonComparator {
+    bool operator()(const Person& p1, const Person& p2) const {
+        return p1.age < p2.age;  // 按年龄升序
+    }
+};
+
+int main() {
+    // 使用函数对象创建降序set
+    std::set<int, Greater> descendingSet = {3, 1, 4, 1, 5, 9};
+    
+    for (int x : descendingSet) {
+        std::cout << x << " ";  // 输出: 9 5 4 3 1
+    }
+    std::cout << std::endl;
+    
+    // 使用函数对象比较Person对象
+    std::set<Person, PersonComparator> people = {
+        {"Alice", 30},
+        {"Bob", 25},
+        {"Charlie", 35}
+    };
+    
+    for (const auto& p : people) {
+        std::cout << p.name << " (" << p.age << ") ";
+    }
+    // 输出: Bob (25) Alice (30) Charlie (35)
+}
+```
+
+## 2. Lambda表达式
+
+```cpp
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+int main() {
+    std::vector<int> vec = {3, 1, 4, 1, 5, 9};
+    
+    // 使用lambda进行排序
+    std::sort(vec.begin(), vec.end(), [](int a, int b) {
+        return a > b;  // 降序
+    });
+    
+    for (int x : vec) {
+        std::cout << x << " ";  // 输出: 9 5 4 3 1 1
+    }
+    std::cout << std::endl;
+    
+    // 复杂的lambda比较
+    std::vector<Person> people = {
+        {"Alice", 30},
+        {"Bob", 25},
+        {"Charlie", 35}
+    };
+    
+    std::sort(people.begin(), people.end(), [](const Person& p1, const Person& p2) {
+        // 先按年龄，年龄相同时按名字排序
+        if (p1.age == p2.age) {
+            return p1.name < p2.name;
+        }
+        return p1.age < p2.age;
+    });
+}
+```
+
+## 3. 函数指针
+
+```cpp
+#include <iostream>
+#include <set>
+
+bool compareDescending(int a, int b) {
+    return a > b;
+}
+
+int main() {
+    // 使用函数指针
+    std::set<int, bool(*)(int, int)> descendingSet(compareDescending);
+    descendingSet = {3, 1, 4, 1, 5, 9};
+    
+    for (int x : descendingSet) {
+        std::cout << x << " ";  // 输出: 9 5 4 3 1
+    }
+}
+```
+
+## 4. std::function
+
+```cpp
+#include <iostream>
+#include <set>
+#include <functional>
+
+int main() {
+    std::function<bool(int, int)> comparator = [](int a, int b) {
+        return a % 10 < b % 10;  // 按个位数排序
+    };
+    
+    std::set<int, std::function<bool(int, int)>> modSet(comparator);
+    modSet = {13, 27, 8, 19, 32};
+    
+    for (int x : modSet) {
+        std::cout << x << " ";  // 按个位数排序输出
+    }
+}
+```
+
+## 5. 不同容器的应用
+
+### 对于 std::set 和 std::map
+
+```cpp
+#include <set>
+#include <map>
+
+// 自定义比较类
+class CustomCompare {
+public:
+    bool operator()(const std::string& a, const std::string& b) const {
+        // 忽略大小写的字符串比较
+        return std::lexicographical_compare(
+            a.begin(), a.end(),
+            b.begin(), b.end(),
+            [](char c1, char c2) {
+                return std::tolower(c1) < std::tolower(c2);
+            }
+        );
+    }
+};
+
+int main() {
+    std::set<std::string, CustomCompare> caseInsensitiveSet;
+    caseInsensitiveSet.insert("Apple");
+    caseInsensitiveSet.insert("apple");
+    caseInsensitiveSet.insert("BANANA");
+    
+    for (const auto& s : caseInsensitiveSet) {
+        std::cout << s << " ";  // 只会有一个"apple"
+    }
+}
+```
+
+### 对于 std::priority_queue
+
+```cpp
+#include <queue>
+#include <vector>
+
+struct Compare {
+    bool operator()(int a, int b) {
+        return a > b;  // 最小堆
+    }
+};
+
+int main() {
+    // 最小堆
+    std::priority_queue<int, std::vector<int>, Compare> minHeap;
+    minHeap.push(3);
+    minHeap.push(1);
+    minHeap.push(4);
+    
+    while (!minHeap.empty()) {
+        std::cout << minHeap.top() << " ";  // 输出: 1 3 4
+        minHeap.pop();
+    }
+}
+```
+
+## 6. 完整的自定义类示例
+
+```cpp
+#include <iostream>
+#include <set>
+#include <string>
+
+class Student {
+public:
+    std::string name;
+    double gpa;
+    
+    Student(std::string n, double g) : name(n), gpa(g) {}
+    
+    // 重载<运算符（可选）
+    bool operator<(const Student& other) const {
+        return gpa > other.gpa;  // GPA高的优先
+    }
+};
+
+// 自定义比较器
+struct StudentCompare {
+    bool operator()(const Student& s1, const Student& s2) const {
+        if (s1.gpa != s2.gpa) {
+            return s1.gpa > s2.gpa;  // GPA高的在前
+        }
+        return s1.name < s2.name;    // GPA相同时按名字排序
+    }
+};
+
+int main() {
+    std::set<Student, StudentCompare> students = {
+        {"Alice", 3.8},
+        {"Bob", 3.9},
+        {"Charlie", 3.8}
+    };
+    
+    for (const auto& s : students) {
+        std::cout << s.name << " (" << s.gpa << ") ";
+    }
+    // 输出: Bob (3.9) Alice (3.8) Charlie (3.8)
+}
+```
+
+## 注意事项
+
+1. **比较函数必须是严格的弱排序**：满足 irreflexivity、asymmetry、transitivity
+2. **const正确性**：比较函数通常应该是const成员函数
+3. **性能考虑**：避免在比较函数中进行昂贵的操作
+4. **一致性**：如果重载了operator<，确保与自定义比较器一致
+
+选择哪种方法取决于具体需求：
+- **函数对象**：性能最好，适合复杂逻辑
+- **Lambda**：简洁，适合简单比较
+- **函数指针**：传统方式，但灵活性较差
+- **std::function**：最灵活，但有性能开销
+
+
 
 说一下你对STL中erase函数返回值的理解。
 
